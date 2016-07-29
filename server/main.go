@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"html"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -16,10 +15,12 @@ import (
 var (
 	articlesBase = flag.String("b", "", "Base path for articles files")
 
+	tmplItem = template.Must(template.New("item").Parse(
+		`<h1>{{.Title}}</h1>{{$id := .ID}}{{ range $i := .Images }}<img src="/img/{{$id}}/{{$i}}" />{{end}}`))
 	tmplSubjects = template.Must(template.New("subjects").Parse(
 		`<ul>{{ range $k, $v := . }}<li><a href="/subject/{{$k}}">{{$k}} ({{len $v}} items)</a></li>{{ end }}</ul>`))
 	tmplSubject = template.Must(template.New("subject").Parse(
-		`<ul>{{ range $i := . }}<li>{{$i.Title}}</li>{{end}}</ul>`))
+		`<ul>{{ range $i := . }}<li><a href="/{{$i.ID}}">{{$i.Title}}</a></li>{{end}}</ul>`))
 )
 
 // Summary is the info from the Summary_nnnnn.json files.
@@ -97,6 +98,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	http.HandleFunc("/img/", func(w http.ResponseWriter, r *http.Request) {
+		f := filepath.Join(*articlesBase, strings.TrimPrefix(r.URL.Path, "/img/"))
+		http.ServeFile(w, r, f)
+	})
 	http.HandleFunc("/subject/", func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		s := strings.TrimPrefix(r.URL.Path, "/subject/")
@@ -107,13 +112,16 @@ func main() {
 			return
 		}
 		h.Set("Content-Type", "text/html")
-		tmplSubject.Execute(w, i)
-
+		if err := tmplSubject.Execute(w, i); err != nil {
+			log.Printf("Executing tmplSubject: %v", err)
+		}
 	})
 	http.HandleFunc("/subjects", func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("Content-Type", "text/html")
-		tmplSubjects.Execute(w, db.BySubject)
+		if err := tmplSubjects.Execute(w, db.BySubject); err != nil {
+			log.Printf("Executing tmplSubjects: %v", err)
+		}
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimLeft(r.URL.Path, "/")
@@ -123,7 +131,9 @@ func main() {
 			fmt.Fprintf(w, "404 Not Found")
 			return
 		}
-		fmt.Fprintf(w, "%s", html.EscapeString(i.Title))
+		if err := tmplItem.Execute(w, i); err != nil {
+			log.Printf("Executing tmplItem: %v", err)
+		}
 	})
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
