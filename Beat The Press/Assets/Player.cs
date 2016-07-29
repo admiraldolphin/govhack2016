@@ -9,6 +9,12 @@ public class Player : MonoBehaviour
 
     public float speed = 10.0f;
 
+    void Start() {
+        if (Actions == null) {
+            Actions = PlayerActions.CreateWithKeyboardBindings();
+        }
+    }
+
     void OnDisable ()
     {
         if (Actions != null) {
@@ -20,7 +26,11 @@ public class Player : MonoBehaviour
     {
         var movement = Actions.Movement.Vector * speed * Time.deltaTime;;
 
-        transform.Translate(movement);
+        var body = GetComponent<Rigidbody2D>();
+
+        body.AddForce(movement);
+
+        //transform.Translate(movement);
 
     }
 

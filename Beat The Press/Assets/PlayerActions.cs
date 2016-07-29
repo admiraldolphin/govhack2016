@@ -9,7 +9,14 @@ public class PlayerActions : PlayerActionSet
     public PlayerAction Right;
     public PlayerAction Up;
     public PlayerAction Down;
-    public PlayerTwoAxisAction Rotate;
+    public PlayerAction Grab;
+
+    public PlayerAction GrabberLeft;
+    public PlayerAction GrabberRight;
+    public PlayerAction GrabberUp;
+    public PlayerAction GrabberDown;
+
+    public PlayerTwoAxisAction GrabberRotation;
     public PlayerTwoAxisAction Movement;
 
     public PlayerActions ()
@@ -19,9 +26,17 @@ public class PlayerActions : PlayerActionSet
         Up = CreatePlayerAction ("Up");
         Down = CreatePlayerAction ("Down");
 
+        Grab = CreatePlayerAction("Grab");
+
+        GrabberLeft = CreatePlayerAction("Grabber Left");
+        GrabberRight = CreatePlayerAction("Grabber Right");
+        GrabberUp = CreatePlayerAction("Grabber Up");
+        GrabberDown = CreatePlayerAction("Grabber Down");
+
+
         Join = CreatePlayerAction("Join");
         Movement = CreateTwoAxisPlayerAction (Left, Right, Down, Up);
-
+        GrabberRotation = CreateTwoAxisPlayerAction (GrabberLeft, GrabberRight, GrabberDown, GrabberUp);
 
     }
 
@@ -35,7 +50,14 @@ public class PlayerActions : PlayerActionSet
         actions.Left.AddDefaultBinding (Key.LeftArrow);
         actions.Right.AddDefaultBinding (Key.RightArrow);
 
+        actions.Grab.AddDefaultBinding(Key.G);
+
         actions.Join.AddDefaultBinding (Key.Space);
+
+        actions.GrabberLeft.AddDefaultBinding (Key.A);
+        actions.GrabberRight.AddDefaultBinding (Key.D);
+        actions.GrabberUp.AddDefaultBinding (Key.W);
+        actions.GrabberDown.AddDefaultBinding (Key.S);
 
         return actions;
     }
