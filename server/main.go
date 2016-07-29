@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"html"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -12,7 +13,14 @@ import (
 	"strings"
 )
 
-var articlesBase = flag.String("b", "", "Base path for articles files")
+var (
+	articlesBase = flag.String("b", "", "Base path for articles files")
+
+	tmplSubjects = template.Must(template.New("subjects").Parse(
+		`<ul>{{ range $k, $v := . }}<li><a href="/subject/{{$k}}">{{$k}} ({{len $v}} items)</a></li>{{ end }}</ul>`))
+	tmplSubject = template.Must(template.New("subject").Parse(
+		`<ul>{{ range $i := . }}<li>{{$i.Title}}</li>{{end}}</ul>`))
+)
 
 // Summary is the info from the Summary_nnnnn.json files.
 type Summary struct {
@@ -66,9 +74,7 @@ func load(base string) (*Database, error) {
 		ByID:      make(map[string]*Item),
 		BySubject: make(map[string][]*Item),
 	}
-
 	for _, s := range sd {
-		//log.Printf("Loading from %s", s)
 		i, err := loadOne(s)
 		if err != nil {
 			log.Printf("Cannot read: %v", err)
@@ -91,12 +97,23 @@ func main() {
 		log.Fatal(err)
 	}
 
+	http.HandleFunc("/subject/", func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		s := strings.TrimPrefix(r.URL.Path, "/subject/")
+		i, ok := db.BySubject[s]
+		if !ok {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprintf(w, "404 Not Found")
+			return
+		}
+		h.Set("Content-Type", "text/html")
+		tmplSubject.Execute(w, i)
+
+	})
 	http.HandleFunc("/subjects", func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("Content-Type", "text/html")
-		for k, v := range db.BySubject {
-			fmt.Fprintf(w, "%s: %d items<br>\n", k, len(v))
-		}
+		tmplSubjects.Execute(w, db.BySubject)
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		id := strings.TrimLeft(r.URL.Path, "/")
