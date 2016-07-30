@@ -26,13 +26,13 @@ public class PlayerActions : PlayerActionSet
         Up = CreatePlayerAction ("Up");
         Down = CreatePlayerAction ("Down");
 
-        Grab = CreatePlayerAction("Grab");
 
         GrabberLeft = CreatePlayerAction("Grabber Left");
         GrabberRight = CreatePlayerAction("Grabber Right");
         GrabberUp = CreatePlayerAction("Grabber Up");
         GrabberDown = CreatePlayerAction("Grabber Down");
 
+        Grab = CreatePlayerAction("Grab");
 
         Join = CreatePlayerAction("Join");
         Movement = CreateTwoAxisPlayerAction (Left, Right, Down, Up);
@@ -40,6 +40,38 @@ public class PlayerActions : PlayerActionSet
 
     }
 
+    public static PlayerActions CreateWithJoystickBindings () {
+        var actions = new PlayerActions();
+
+        actions.Up.AddDefaultBinding( InputControlType.LeftStickUp );
+        actions.Down.AddDefaultBinding( InputControlType.LeftStickDown );
+        actions.Left.AddDefaultBinding( InputControlType.LeftStickLeft );
+        actions.Right.AddDefaultBinding( InputControlType.LeftStickRight );
+
+        actions.Up.AddDefaultBinding( InputControlType.DPadUp );
+        actions.Down.AddDefaultBinding( InputControlType.DPadDown );
+        actions.Left.AddDefaultBinding( InputControlType.DPadLeft );
+        actions.Right.AddDefaultBinding( InputControlType.DPadRight );
+
+        actions.GrabberUp.AddDefaultBinding( InputControlType.RightStickUp );
+        actions.GrabberDown.AddDefaultBinding( InputControlType.RightStickDown );
+        actions.GrabberLeft.AddDefaultBinding( InputControlType.RightStickLeft );
+        actions.GrabberRight.AddDefaultBinding( InputControlType.RightStickRight );
+
+        actions.Grab.AddDefaultBinding(InputControlType.Action1);
+        actions.Grab.AddDefaultBinding(InputControlType.Action2);
+        actions.Grab.AddDefaultBinding(InputControlType.Action3);
+        actions.Grab.AddDefaultBinding(InputControlType.Action4);
+        actions.Grab.AddDefaultBinding(InputControlType.RightBumper);
+        actions.Grab.AddDefaultBinding(InputControlType.RightTrigger);
+
+
+        actions.Join.AddDefaultBinding (InputControlType.Start);
+        actions.Join.AddDefaultBinding (InputControlType.Options);
+
+        return actions;
+
+    }
 
     public static PlayerActions CreateWithKeyboardBindings ()
     {
@@ -50,14 +82,13 @@ public class PlayerActions : PlayerActionSet
         actions.Left.AddDefaultBinding (Key.LeftArrow);
         actions.Right.AddDefaultBinding (Key.RightArrow);
 
-        actions.Grab.AddDefaultBinding(Key.G);
-
-        actions.Join.AddDefaultBinding (Key.Space);
-
         actions.GrabberLeft.AddDefaultBinding (Key.A);
         actions.GrabberRight.AddDefaultBinding (Key.D);
         actions.GrabberUp.AddDefaultBinding (Key.W);
         actions.GrabberDown.AddDefaultBinding (Key.S);
+
+        actions.Grab.AddDefaultBinding(Key.G);
+        actions.Join.AddDefaultBinding (Key.Space);
 
         return actions;
     }

@@ -24,34 +24,34 @@ public class PlayerManager : MonoBehaviour
     List<Player> players = new List<Player> (maxPlayers);
 
     PlayerActions keyboardListener;
-    //PlayerActions joystickListener;
+    PlayerActions joystickListener;
 
 
     void OnEnable ()
     {
         InputManager.OnDeviceDetached += OnDeviceDetached;
         keyboardListener = PlayerActions.CreateWithKeyboardBindings ();
-        //joystickListener = PlayerActions.CreateWithJoystickBindings ();
+        joystickListener = PlayerActions.CreateWithJoystickBindings ();
     }
 
 
     void OnDisable ()
     {
         InputManager.OnDeviceDetached -= OnDeviceDetached;
-        //joystickListener.Destroy ();
+        joystickListener.Destroy ();
         keyboardListener.Destroy ();
     }
 
 
     void Update ()
     {
-//        if (JoinButtonWasPressedOnListener (joystickListener)) {
-//            var inputDevice = InputManager.ActiveDevice;
-//
-//            if (ThereIsNoPlayerUsingJoystick (inputDevice)) {
-//                CreatePlayer (inputDevice);
-//            }
-//        }
+        if (JoinButtonWasPressedOnListener (joystickListener)) {
+            var inputDevice = InputManager.ActiveDevice;
+
+            if (ThereIsNoPlayerUsingJoystick (inputDevice)) {
+                CreatePlayer (inputDevice);
+            }
+        }
 
         if (JoinButtonWasPressedOnListener (keyboardListener)) {
             if (ThereIsNoPlayerUsingKeyboard ()) {
@@ -133,10 +133,10 @@ public class PlayerManager : MonoBehaviour
             } else {
                 // Create a new instance and specifically set it to listen to the
                 // given input device (joystick).
-                //var actions = PlayerActions.CreateWithJoystickBindings ();
-                //actions.Device = inputDevice;
+                var actions = PlayerActions.CreateWithJoystickBindings ();
+                actions.Device = inputDevice;
 
-                //player.Actions = actions;
+                player.Actions = actions;
             }
 
             players.Add (player);
