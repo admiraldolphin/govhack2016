@@ -6,6 +6,8 @@ import (
 	"github.com/admiraldolphin/govhack2016/server/quiz"
 )
 
+const source = "ABC"
+
 func (db *Database) MakeQuestions(n int) []*quiz.Question {
 	corpus := make([]*quiz.Question, 0, n)
 	for i := 0; i < n; i++ {
@@ -31,6 +33,7 @@ func (db *Database) MakeQuestions(n int) []*quiz.Question {
 			Clue:    ans.Title,
 			Answer:  c[0],
 			Choices: c,
+			Source:  source,
 		}
 		corpus = append(corpus, q)
 	}

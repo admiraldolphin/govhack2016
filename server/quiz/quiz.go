@@ -14,6 +14,7 @@ type Question struct {
 	Clue    string   `json:"clue"`
 	Choices []string `json:"choices"`
 	Answer  string   `json:"answer"`
+	Source  string   `json:"source"`
 }
 
 type Quiz struct {
