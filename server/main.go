@@ -33,7 +33,10 @@ func main() {
 	npgDB.AddHandlers()
 
 	q := quiz.Quiz{
-		Corpus: append(abcDB.MakeQuestions(50), npgDB.MakeQuestions(5)...),
+		Sources: []quiz.Source{
+			{MakeQuestion: abcDB.MakeQuestion, Ratio: 10},
+			{MakeQuestion: npgDB.MakeQuestion, Ratio: 1},
+		},
 	}
 	q.AddHandlers()
 

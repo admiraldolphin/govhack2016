@@ -42,6 +42,10 @@ func Load(base string) (*Database, error) {
 	}
 	p := make([]Portrait, 0, len(pm))
 	for f, t := range pm {
+		if t == "Self portrait" {
+			// A bit ambiguous given we haven't bothered with artist.
+			continue
+		}
 		p = append(p, Portrait{
 			File:  f,
 			Title: t,
@@ -56,30 +60,27 @@ func Load(base string) (*Database, error) {
 
 func (db *Database) AddHandlers() {
 	http.HandleFunc("/npg/img/", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL)
 		f := filepath.Join(db.BasePath, "portraits", strings.TrimPrefix(r.URL.Path, "/npg/img/"))
 		http.ServeFile(w, r, f)
 	})
 }
 
-func (db *Database) MakeQuestions(n int) []*quiz.Question {
-	corpus := make([]*quiz.Question, 0, n)
-	for len(corpus) < n {
-		ans := db.Portraits[rand.Intn(len(db.Portraits))]
-		c := []string{ans.ImagePath()}
-		for len(c) < 4 {
-			i := db.Portraits[rand.Intn(len(db.Portraits))]
-			if i == ans {
-				continue
-			}
-			c = append(c, i.ImagePath())
+func (db *Database) MakeQuestion() *quiz.Question {
+	ans := db.Portraits[rand.Intn(len(db.Portraits))]
+	c := []string{ans.ImagePath()}
+	for len(c) < 4 {
+		i := db.Portraits[rand.Intn(len(db.Portraits))]
+		if i == ans {
+			continue
 		}
-
-		corpus = append(corpus, &quiz.Question{
-			Clue:    ans.Title,
-			Choices: c,
-			Answer:  c[0],
-			Source:  source,
-		})
+		c = append(c, i.ImagePath())
 	}
-	return corpus
+
+	return &quiz.Question{
+		Clue:    ans.Title,
+		Choices: c,
+		Answer:  c[0],
+		Source:  source,
+	}
 }

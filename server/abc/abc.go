@@ -64,10 +64,12 @@ type Database struct {
 
 func (db *Database) AddHandlers() {
 	http.HandleFunc("/abc/img/", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL)
 		f := filepath.Join(db.BasePath, strings.TrimPrefix(r.URL.Path, "/abc/img/"))
 		http.ServeFile(w, r, f)
 	})
 	http.HandleFunc("/abc/subject/", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL)
 		h := w.Header()
 		s := strings.TrimPrefix(r.URL.Path, "/abc/subject/")
 		i, ok := db.BySubject[s]
@@ -82,6 +84,7 @@ func (db *Database) AddHandlers() {
 		}
 	})
 	http.HandleFunc("/abc/subjects", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL)
 		h := w.Header()
 		h.Set("Content-Type", "text/html")
 		if err := tmplSubjects.Execute(w, db.BySubject); err != nil {
@@ -89,6 +92,7 @@ func (db *Database) AddHandlers() {
 		}
 	})
 	http.HandleFunc("/abc/", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL)
 		id := strings.TrimLeft(r.URL.Path, "/abc/")
 		i, ok := db.ByID[id]
 		if !ok {

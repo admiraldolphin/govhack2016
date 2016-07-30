@@ -18,11 +18,22 @@ type Question struct {
 }
 
 type Quiz struct {
-	Corpus []*Question
+	Sources []Source
+}
+
+type Source struct {
+	MakeQuestion func() *Question
+	Ratio        int
 }
 
 func (q *Quiz) AddHandlers() {
+	sum := 0
+	for _, s := range q.Sources {
+		sum += s.Ratio
+	}
 	http.HandleFunc("/quiz", func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s", r.Method, r.URL)
+
 		// How many do we want?
 		n := 1
 		vals := r.URL.Query()
@@ -30,11 +41,18 @@ func (q *Quiz) AddHandlers() {
 			n = t
 		}
 
-		// Pick that many questions.
+		// Generate that many questions.
 		qs := make([]*Question, 0, n)
-		for i := 0; i < n; i++ {
-			u := q.Corpus[rand.Intn(len(q.Corpus))]
-			qs = append(qs, u)
+		for len(qs) < n {
+			sn := rand.Intn(sum)
+			for _, s := range q.Sources {
+				if sn >= s.Ratio {
+					sn -= s.Ratio
+					continue
+				}
+				qs = append(qs, s.MakeQuestion())
+				break
+			}
 		}
 
 		// Serve all the questions at once
