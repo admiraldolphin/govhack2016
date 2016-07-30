@@ -11,6 +11,7 @@ import (
 
 	"github.com/admiraldolphin/govhack2016/server/abc"
 	"github.com/admiraldolphin/govhack2016/server/csiro"
+	"github.com/admiraldolphin/govhack2016/server/fake"
 	"github.com/admiraldolphin/govhack2016/server/linc"
 	"github.com/admiraldolphin/govhack2016/server/newscorp"
 	"github.com/admiraldolphin/govhack2016/server/portrait"
@@ -84,6 +85,7 @@ func main() {
 		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: db.MakeQuestion, Ratio: 1})
 	}
 
+	q.Sources = append(q.Sources, quiz.Source{MakeQuestion: fake.MakeQuestion, Ratio: 3})
 	q.AddHandlers()
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
