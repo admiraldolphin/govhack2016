@@ -26,6 +26,14 @@ type Item struct {
 	*Summary
 }
 
+func (i *Item) PrettyJSON() string {
+	b, err := json.MarshalIndent(i, "", "    ")
+	if err != nil {
+		log.Printf("Error marshalling some pretty JSON: %v", err)
+	}
+	return string(b)
+}
+
 // Database holds all the summaries in memory organsied in various ways.
 type Database struct {
 	ByID      map[string]*Item

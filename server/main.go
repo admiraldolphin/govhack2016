@@ -17,7 +17,7 @@ var (
 	port         = flag.Int("port", 8080, "Serving port")
 
 	tmplItem = template.Must(template.New("item").Parse(
-		`<h1>{{.Title}}</h1>{{$id := .ID}}{{ range $i := .Images }}<img src="/img/{{$id}}/{{$i}}" />{{end}}`))
+		`<h1>{{.Title}}</h1><pre>{{ .PrettyJSON }}</pre>{{$id := .ID}}{{ range $i := .Images }}<img src="/img/{{$id}}/{{$i}}" />{{end}}`))
 	tmplSubjects = template.Must(template.New("subjects").Parse(
 		`<ul>{{ range $k, $v := . }}<li><a href="/subject/{{$k}}">{{$k}} ({{len $v}} items)</a></li>{{ end }}</ul>`))
 	tmplSubject = template.Must(template.New("subject").Parse(
@@ -29,7 +29,7 @@ func main() {
 
 	db, err := abc.Load(*articlesBase)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Loading ABC articles database: %v", err)
 	}
 
 	http.HandleFunc("/img/", func(w http.ResponseWriter, r *http.Request) {
