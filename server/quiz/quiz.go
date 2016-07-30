@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strconv"
 )
 
 // Question is information needed to ask a multi-choice question and judge answers.
@@ -21,8 +22,22 @@ type Quiz struct {
 
 func (q *Quiz) AddHandlers() {
 	http.HandleFunc("/quiz", func(w http.ResponseWriter, r *http.Request) {
-		u := q.Corpus[rand.Intn(len(q.Corpus))]
-		b, err := json.Marshal(u)
+		// How many do we want?
+		n := 1
+		vals := r.URL.Query()
+		if t, err := strconv.Atoi(vals.Get("n")); err == nil {
+			n = t
+		}
+
+		// Pick that many questions.
+		qs := make([]*Question, 0, n)
+		for i := 0; i < n; i++ {
+			u := q.Corpus[rand.Intn(len(q.Corpus))]
+			qs = append(qs, u)
+		}
+
+		// Serve all the questions at once
+		b, err := json.Marshal(qs)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(w, "500 Internal Server Error")
@@ -34,5 +49,6 @@ func (q *Quiz) AddHandlers() {
 		if _, err := w.Write(b); err != nil {
 			log.Printf("Serving /quiz: %v", err)
 		}
+
 	})
 }

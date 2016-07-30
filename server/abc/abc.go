@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	"sort"
@@ -37,6 +38,10 @@ type Item struct {
 	BasePath string
 	ID       string
 	*Summary
+}
+
+func (i *Item) RandomImage() string {
+	return fmt.Sprintf("/abc/img/%s/%s", i.ID, i.Images[rand.Intn(len(i.Images))])
 }
 
 func (i *Item) PrettyJSON() string {
