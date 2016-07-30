@@ -11,7 +11,11 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/admiraldolphin/govhack2016/server/quiz"
 )
+
+const source = "ABC"
 
 var (
 	tmplItem = template.Must(template.New("item").Parse(
@@ -147,9 +151,11 @@ func Load(base string, minItems int) (*Database, error) {
 			db.BySubject[c] = append(db.BySubject[c], i)
 		}
 	}
-	db.Subjects = make([]string, 0, len(db.BySubject))
+	db.Subjects = []string{"Misc"}
 	for s, i := range db.BySubject {
 		if len(i) < minItems {
+			// Glom small subjects into "Misc".
+			db.BySubject["Misc"] = append(db.BySubject["Misc"], i...)
 			continue
 		}
 		db.Subjects = append(db.Subjects, s)
@@ -157,4 +163,38 @@ func Load(base string, minItems int) (*Database, error) {
 	sort.Strings(db.Subjects)
 	log.Printf("Loaded %d items into %d subjects (%d used)", len(db.ByID), len(db.BySubject), len(db.Subjects))
 	return db, nil
+}
+
+func (db *Database) MakeQuestion() *quiz.Question {
+	// Pick a subject.
+	subj := db.Subjects[rand.Intn(len(db.Subjects))]
+
+	// Pick an item to be the answer.
+	items := db.BySubject[subj]
+	ans := items[rand.Intn(len(items))]
+	c := []string{ans.RandomImage()}
+
+	// Pick some other choices.
+pickChoices:
+	for len(c) < 4 {
+		i := items[rand.Intn(len(items))]
+		if i == ans || len(i.Images) == 0 {
+			continue pickChoices
+		}
+		im := i.RandomImage()
+		for _, k := range c {
+			if im == k {
+				continue pickChoices
+			}
+		}
+		c = append(c, i.RandomImage())
+	}
+
+	// Make a question
+	return &quiz.Question{
+		Clue:    ans.Title,
+		Answer:  c[0],
+		Choices: c,
+		Source:  source,
+	}
 }
