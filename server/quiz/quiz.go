@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+
+	"github.com/admiraldolphin/govhack2016/server/fake"
 )
 
 // Question is information needed to ask a multi-choice question and judge answers.
@@ -18,7 +20,8 @@ type Question struct {
 }
 
 type Quiz struct {
-	Sources []Source
+	Sources   []Source
+	FakesProb float64
 }
 
 type Source struct {
@@ -55,7 +58,13 @@ func (q *Quiz) AddHandlers() {
 					sn -= s.Ratio
 					continue
 				}
-				qs = append(qs, s.MakeQuestion())
+				qn := s.MakeQuestion()
+				if rand.Float64() < q.FakesProb {
+					qn.Clue = fake.One()
+					qn.Answer = ""
+					qn.Source = "Generated Fake"
+				}
+				qs = append(qs, qn)
 				break
 			}
 		}

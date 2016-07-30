@@ -11,7 +11,6 @@ import (
 
 	"github.com/admiraldolphin/govhack2016/server/abc"
 	"github.com/admiraldolphin/govhack2016/server/csiro"
-	"github.com/admiraldolphin/govhack2016/server/fake"
 	"github.com/admiraldolphin/govhack2016/server/linc"
 	"github.com/admiraldolphin/govhack2016/server/newscorp"
 	"github.com/admiraldolphin/govhack2016/server/portrait"
@@ -24,7 +23,7 @@ var (
 	lincBase     = flag.String("linc_base", "", "Base path for LINC Tasmania files")
 	newscorpBase = flag.String("newscorp_base", "", "Base path for Newscorp files")
 	csiroBase    = flag.String("csiro_base", "", "Base path for CSIRO Science Image files")
-	fakes        = flag.Bool("fakes", true, "Enable fake headlines")
+	fakesProb    = flag.Float64("fakes_probability", 0.1, "Probability that the clue and answer will be replaced with a fake")
 	port         = flag.Int("port", 8080, "Serving port")
 	minItems     = flag.Int("min_items", 5, "Minimum items in a subject to not combine the subject for questions")
 )
@@ -39,7 +38,9 @@ func main() {
 	}
 	rand.Seed(int64(binary.BigEndian.Uint64(b)))
 
-	q := quiz.Quiz{}
+	q := quiz.Quiz{
+		FakesProb: *fakesProb,
+	}
 
 	if *abcBase != "" {
 		abcDB, err := abc.Load(*abcBase, *minItems)
@@ -86,9 +87,6 @@ func main() {
 		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: db.MakeQuestion, Ratio: 1})
 	}
 
-	if *fakes {
-		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: fake.MakeQuestion, Ratio: 3})
-	}
 	q.AddHandlers()
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))

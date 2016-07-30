@@ -1,19 +1,9 @@
 package fake
 
-import (
-	"math/rand"
+import "math/rand"
 
-	"github.com/admiraldolphin/govhack2016/server/quiz"
-)
-
-func MakeQuestion() *quiz.Question {
-	h := fakeHeadlines[rand.Intn(len(fakeHeadlines))]
-	return &quiz.Question{
-		Clue:    h,
-		Answer:  "",
-		Choices: nil,
-		Source:  "Generated Fake",
-	}
+func One() string {
+	return fakeHeadlines[rand.Intn(len(fakeHeadlines))]
 }
 
 var fakeHeadlines = []string{
