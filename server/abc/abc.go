@@ -40,10 +40,12 @@ type Item struct {
 	*Summary
 }
 
+// RandomImage returns a relative URL path to one of the images associated with an item.
 func (i *Item) RandomImage() string {
 	return fmt.Sprintf("/abc/img/%s/%s", i.ID, i.Images[rand.Intn(len(i.Images))])
 }
 
+// PrettyJSON pretty-prints the item in JSON with 4-space indents.
 func (i *Item) PrettyJSON() string {
 	b, err := json.MarshalIndent(i, "", "    ")
 	if err != nil {
