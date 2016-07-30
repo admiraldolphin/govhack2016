@@ -24,6 +24,7 @@ var (
 	lincBase     = flag.String("linc_base", "", "Base path for LINC Tasmania files")
 	newscorpBase = flag.String("newscorp_base", "", "Base path for Newscorp files")
 	csiroBase    = flag.String("csiro_base", "", "Base path for CSIRO Science Image files")
+	fakes        = flag.Bool("fakes", true, "Enable fake headlines")
 	port         = flag.Int("port", 8080, "Serving port")
 	minItems     = flag.Int("min_items", 5, "Minimum items in a subject to not combine the subject for questions")
 )
@@ -85,7 +86,9 @@ func main() {
 		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: db.MakeQuestion, Ratio: 1})
 	}
 
-	q.Sources = append(q.Sources, quiz.Source{MakeQuestion: fake.MakeQuestion, Ratio: 3})
+	if *fakes {
+		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: fake.MakeQuestion, Ratio: 3})
+	}
 	q.AddHandlers()
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
