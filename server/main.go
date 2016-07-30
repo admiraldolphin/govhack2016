@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/admiraldolphin/govhack2016/server/abc"
+	"github.com/admiraldolphin/govhack2016/server/quiz"
 )
 
 var (
@@ -21,6 +22,22 @@ func main() {
 		log.Fatalf("Loading ABC articles database: %v", err)
 	}
 	db.AddHandlers()
+
+	q := quiz.Quiz{
+		Corpus: []*quiz.Question{
+			{
+				Clue:    "Clue 1",
+				Choices: []string{"A", "B", "C", "D"},
+				Answer:  "A",
+			},
+			{
+				Clue:    "Clue 2",
+				Choices: []string{"A", "B", "C", "D"},
+				Answer:  "B",
+			},
+		},
+	}
+	q.AddHandlers()
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
 }
