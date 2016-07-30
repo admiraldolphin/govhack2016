@@ -13,29 +13,19 @@ import (
 var (
 	articlesBase = flag.String("b", "", "Base path for articles files")
 	port         = flag.Int("port", 8080, "Serving port")
+	minItems     = flag.Int("min_items", 5, "Minimum items in a subject to make questions from")
 )
 
 func main() {
 	flag.Parse()
-	db, err := abc.Load(*articlesBase)
+	db, err := abc.Load(*articlesBase, *minItems)
 	if err != nil {
 		log.Fatalf("Loading ABC articles database: %v", err)
 	}
-	db.AddHandlers()
+	db.AddHandlers() // Try browsing from at /abc/subjects
 
 	q := quiz.Quiz{
-		Corpus: []*quiz.Question{
-			{
-				Clue:    "Clue 1",
-				Choices: []string{"A", "B", "C", "D"},
-				Answer:  "A",
-			},
-			{
-				Clue:    "Clue 2",
-				Choices: []string{"A", "B", "C", "D"},
-				Answer:  "B",
-			},
-		},
+		Corpus: db.MakeQuestions(50),
 	}
 	q.AddHandlers()
 

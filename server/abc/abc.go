@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -51,6 +52,7 @@ type Database struct {
 	BasePath  string
 	ByID      map[string]*Item
 	BySubject map[string][]*Item
+	Subjects  []string
 }
 
 func (db *Database) AddHandlers() {
@@ -112,7 +114,7 @@ func loadOne(base string) (*Item, error) {
 }
 
 // Load loads the ABC articles database at a base path.
-func Load(base string) (*Database, error) {
+func Load(base string, minItems int) (*Database, error) {
 	sd, err := filepath.Glob(filepath.Join(base, "*"))
 	if err != nil {
 		return nil, err
@@ -134,6 +136,14 @@ func Load(base string) (*Database, error) {
 			db.BySubject[c] = append(db.BySubject[c], i)
 		}
 	}
-	log.Printf("Loaded %d items into %d subjects", len(db.ByID), len(db.BySubject))
+	db.Subjects = make([]string, 0, len(db.BySubject))
+	for s, i := range db.BySubject {
+		if len(i) < minItems {
+			continue
+		}
+		db.Subjects = append(db.Subjects, s)
+	}
+	sort.Strings(db.Subjects)
+	log.Printf("Loaded %d items into %d subjects (%d used)", len(db.ByID), len(db.BySubject), len(db.Subjects))
 	return db, nil
 }
