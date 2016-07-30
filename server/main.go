@@ -1,19 +1,20 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"html/template"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/admiraldolphin/govhack2016/server/abc"
 )
 
 var (
 	articlesBase = flag.String("b", "", "Base path for articles files")
+	port         = flag.Int("port", 8080, "Serving port")
 
 	tmplItem = template.Must(template.New("item").Parse(
 		`<h1>{{.Title}}</h1>{{$id := .ID}}{{ range $i := .Images }}<img src="/img/{{$id}}/{{$i}}" />{{end}}`))
@@ -23,77 +24,10 @@ var (
 		`<ul>{{ range $i := . }}<li><a href="/{{$i.ID}}">{{$i.Title}}</a></li>{{end}}</ul>`))
 )
 
-// Summary is the info from the Summary_nnnnn.json files.
-type Summary struct {
-	TeaserTextPlain      string   `json:"teaserTextPlain"`
-	ShortTeaserTextPlain string   `json:"shortTeaserTextPlain"`
-	TeaserTitle          string   `json:"teaserTitle"`
-	ShortTeaserTitle     string   `json:"shortTeaserTitle"`
-	Title                string   `json:"title"`
-	Images               []string `json:"images"`
-	Subjects             []string `json:"subjects"`
-}
-
-// Item is a Summary plus other info needed for the item.
-type Item struct {
-	BasePath string
-	ID       string
-	*Summary
-}
-
-// Database holds all the summaries in memory organsied in various ways.
-type Database struct {
-	ByID      map[string]*Item
-	BySubject map[string][]*Item
-}
-
-func loadOne(base string) (*Item, error) {
-	id := filepath.Base(base)
-	fn := filepath.Join(base, fmt.Sprintf("Summary_%s.json", id))
-	b, err := ioutil.ReadFile(fn)
-	if err != nil {
-		return nil, err
-	}
-	sum := new(Summary)
-	if err := json.Unmarshal(b, sum); err != nil {
-		return nil, err
-	}
-	return &Item{
-		BasePath: base,
-		ID:       id,
-		Summary:  sum,
-	}, nil
-}
-
-func load(base string) (*Database, error) {
-	sd, err := filepath.Glob(filepath.Join(base, "*"))
-	if err != nil {
-		return nil, err
-	}
-
-	db := &Database{
-		ByID:      make(map[string]*Item),
-		BySubject: make(map[string][]*Item),
-	}
-	for _, s := range sd {
-		i, err := loadOne(s)
-		if err != nil {
-			log.Printf("Cannot read: %v", err)
-			continue
-		}
-		db.ByID[i.ID] = i
-		for _, c := range i.Subjects {
-			db.BySubject[c] = append(db.BySubject[c], i)
-		}
-	}
-	log.Printf("Loaded %d items into %d subjects", len(db.ByID), len(db.BySubject))
-	return db, nil
-}
-
 func main() {
 	flag.Parse()
 
-	db, err := load(*articlesBase)
+	db, err := abc.Load(*articlesBase)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -135,5 +69,6 @@ func main() {
 			log.Printf("Executing tmplItem: %v", err)
 		}
 	})
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), nil))
 }
