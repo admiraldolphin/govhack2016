@@ -146,6 +146,9 @@ func Load(base string, minItems int) (*Database, error) {
 			log.Printf("Cannot read: %v", err)
 			continue
 		}
+		if len(i.Images) == 0 {
+			continue
+		}
 		db.ByID[i.ID] = i
 		for _, c := range i.Subjects {
 			db.BySubject[c] = append(db.BySubject[c], i)
@@ -187,7 +190,7 @@ pickChoices:
 				continue pickChoices
 			}
 		}
-		c = append(c, i.RandomImage())
+		c = append(c, im)
 	}
 
 	// Make a question
