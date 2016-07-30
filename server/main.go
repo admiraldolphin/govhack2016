@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/admiraldolphin/govhack2016/server/abc"
+	"github.com/admiraldolphin/govhack2016/server/csiro"
 	"github.com/admiraldolphin/govhack2016/server/linc"
 	"github.com/admiraldolphin/govhack2016/server/newscorp"
 	"github.com/admiraldolphin/govhack2016/server/portrait"
@@ -21,6 +22,7 @@ var (
 	npgBase      = flag.String("npg_base", "", "Base path for National Portrait Gallery files")
 	lincBase     = flag.String("linc_base", "", "Base path for LINC Tasmania files")
 	newscorpBase = flag.String("newscorp_base", "", "Base path for Newscorp files")
+	csiroBase    = flag.String("csiro_base", "", "Base path for CSIRO Science Image files")
 	port         = flag.Int("port", 8080, "Serving port")
 	minItems     = flag.Int("min_items", 5, "Minimum items in a subject to not combine the subject for questions")
 )
@@ -71,6 +73,15 @@ func main() {
 		}
 		ndb.AddHandlers()
 		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: ndb.MakeQuestion, Ratio: 1})
+	}
+
+	if *csiroBase != "" {
+		db, err := csiro.Load(*csiroBase)
+		if err != nil {
+			log.Fatalf("Loading CSIRO Science Image database: %v", err)
+		}
+		db.AddHandlers()
+		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: db.MakeQuestion, Ratio: 1})
 	}
 
 	q.AddHandlers()
