@@ -40,6 +40,11 @@ func (q *Quiz) AddHandlers() {
 		if t, err := strconv.Atoi(vals.Get("n")); err == nil {
 			n = t
 		}
+		if n < 1 || n > 50 {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprint(w, "403 Forbidden")
+			return
+		}
 
 		// Generate that many questions.
 		qs := make([]*Question, 0, n)
