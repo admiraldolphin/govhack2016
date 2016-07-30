@@ -26,13 +26,14 @@ func main() {
 	}
 	abcDB.AddHandlers() // For debugging. Try browsing from at /abc/subjects
 
-	_, err = portrait.Load(*npgBase)
+	npgDB, err := portrait.Load(*npgBase)
 	if err != nil {
 		log.Fatalf("Loading National Portrait Gallery database: %v", err)
 	}
+	npgDB.AddHandlers()
 
 	q := quiz.Quiz{
-		Corpus: abcDB.MakeQuestions(50),
+		Corpus: append(abcDB.MakeQuestions(50), npgDB.MakeQuestions(5)...),
 	}
 	q.AddHandlers()
 

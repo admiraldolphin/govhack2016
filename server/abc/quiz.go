@@ -10,7 +10,7 @@ const source = "ABC"
 
 func (db *Database) MakeQuestions(n int) []*quiz.Question {
 	corpus := make([]*quiz.Question, 0, n)
-	for i := 0; i < n; i++ {
+	for len(corpus) < n {
 		// Pick a subject.
 		subj := db.Subjects[rand.Intn(len(db.Subjects))]
 
