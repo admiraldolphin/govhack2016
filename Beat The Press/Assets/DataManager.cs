@@ -172,6 +172,16 @@ public class DataManager : MonoBehaviour {
 
     void Start() {
 
+        var configFile = System.IO.Path.Combine(Application.persistentDataPath,"config.txt");
+
+        if (System.IO.File.Exists(configFile)) {
+            var text = System.IO.File.ReadAllLines(configFile);
+            if (text.Length > 0) {
+                this.URL = text[0];
+            }
+        } else {
+            System.IO.File.WriteAllText(configFile, this.URL);
+        }
 
         StartCoroutine(MainGameLoop());
     }
