@@ -10,8 +10,8 @@ import (
 	"strings"
 )
 
-func Hex(c color.RGBA) []uint8 {
-	return []uint8{c.R, c.G, c.B}
+func Hex(c color.RGBA) []int {
+	return []int{int(c.R), int(c.G), int(c.B)}
 }
 
 func ServeBorderedImage(w http.ResponseWriter, req *http.Request, file string, thickness float64, col color.Color) {
