@@ -171,9 +171,9 @@ public class DataManager : MonoBehaviour {
     }
 
     void Start() {
-        StartCoroutine(LoadData());
 
-        StartCoroutine(CreateSceneQuestions());
+
+        StartCoroutine(MainGameLoop());
     }
 
 
@@ -234,124 +234,169 @@ public class DataManager : MonoBehaviour {
     }
 
     public RectTransform menu;
+    public RectTransform scoreboard;
     public RectTransform pressAnyKey;
 
-    IEnumerator CreateSceneQuestions() {
-
-        menu.gameObject.SetActive(true);
-        pressAnyKey.gameObject.SetActive(false);
-
-        Debug.Log("Waiting for download to complete");
-
-        yield return new WaitUntil(delegate() {
-            return this.state == State.Loaded;
-        });
-
-        Debug.Log("Download complete!");
-
-
-        pressAnyKey.gameObject.SetActive(true);
-
-        // wait for a button to be pressed
-        yield return new WaitUntil(() => InControl.InputManager.CommandWasPressed);
-
-        menu.gameObject.SetActive(false);
-
-        var activeQuestions = new List<QuestionSet>();
-
-        FindObjectOfType<PlayerManager>().playersCanJoin = true;
-
-        FindObjectOfType<TimeManager>().StartClock();
-
+    IEnumerator MainGameLoop() {
 
         while (true) {
+            menu.gameObject.SetActive(true);
+            scoreboard.gameObject.SetActive(false);
+            pressAnyKey.gameObject.SetActive(false);
+
+            yield return StartCoroutine(LoadData());
 
 
+            Debug.Log("Waiting for download to complete");
 
-            if (FindObjectOfType<TimeManager>().clockHasExpired) {
-                break;
+            yield return new WaitUntil(delegate() {
+                return this.state == State.Loaded;
+            });
+
+            Debug.Log("Download complete!");
+
+
+            pressAnyKey.gameObject.SetActive(true);
+
+            // wait for a button to be pressed
+            yield return new WaitUntil(
+                () => InControl.InputManager.CommandWasPressed ||
+                InControl.InputManager.AnyKeyIsPressed
+            );
+
+            menu.gameObject.SetActive(false);
+
+            FindObjectOfType<PlayerManager>().playersCanJoin = true;
+
+            FindObjectOfType<TimeManager>().StartClock();
+
+            activeQuestions = new List<QuestionSet>();
+
+
+            while (UpdateGame()) {
+                
+                // wait for the next frame
+                yield return null;
             }
 
-            // should we remove expired questions?
-            foreach (var question in activeQuestions) {
-                if (question.tickerElement == null) {
-                    foreach (var answer in question.images) {  
-                        if (answer != null)
-                            Destroy(answer.gameObject);
-                    }
+            FindObjectOfType<ScoreManager>().UpdateScoreboard();
+
+            FindObjectOfType<PlayerManager>().RemoveAllPlayers();
+
+            scoreboard.gameObject.SetActive(true);
+
+            // clear all answers
+            foreach (var answer in FindObjectsOfType<AnswerImage>()) {
+                Destroy(answer.gameObject);
+            }
+
+            // clear the ticker
+            FindObjectOfType<TickerManager>().Clear();
+
+            // clear the scorebar
+            FindObjectOfType<ScoreManager>().ClearScoreBar();
+
+
+            // wait for a button to be pressed
+            yield return new WaitUntil(
+                () => InControl.InputManager.CommandWasPressed ||
+                InControl.InputManager.AnyKeyIsPressed
+            );
+
+
+
+            // and start the game again
+        }
+
+
+
+    }
+
+    List<QuestionSet> activeQuestions = new List<QuestionSet>();
+
+
+    private bool UpdateGame() {
+
+
+
+        if (FindObjectOfType<TimeManager>().clockHasExpired) {
+            return false;
+        }
+
+        // should we remove expired questions?
+        foreach (var question in activeQuestions) {
+            if (question.tickerElement == null) {
+                foreach (var answer in question.images) {  
+                    if (answer != null)
+                        Destroy(answer.gameObject);
                 }
             }
+        }
 
-            activeQuestions.RemoveAll(q => q.tickerElement == null);
+        activeQuestions.RemoveAll(q => q.tickerElement == null);
 
-            // can we add a new question?
-            if (ticker.CanAddNewItem()) {
+        // can we add a new question?
+        if (ticker.CanAddNewItem()) {
 
-                var questionSet = new QuestionSet();
+            var questionSet = new QuestionSet();
 
-                // select a question
-                var nextQuestion = questions[Random.Range(0, questions.Count)];
+            // select a question
+            var nextQuestion = questions[Random.Range(0, questions.Count)];
 
-                if (nextQuestion.answerTexture == null) {
+            if (nextQuestion.answerTexture == null) {
+                return true;
+            }
+
+            questionSet.question = nextQuestion;
+
+            questionSet.images = new List<AnswerImage>();
+
+            questionSet.tickerElement = ticker.AddNewItem(nextQuestion.clue);
+            questionSet.tickerElement.expectedImageName = nextQuestion.answer;
+
+            var questionColor = new Color32(
+                (byte)nextQuestion.colour[0], 
+                (byte)nextQuestion.colour[1], 
+                (byte)nextQuestion.colour[2], 
+                255
+            );
+
+            questionSet.tickerElement.color = questionColor;
+
+            var spawnPoints = GameObject.FindGameObjectsWithTag("Respawn");
+
+
+            // spawn the answer
+            questionSet.images.Add(SpawnImage(spawnPoints, nextQuestion.answer,nextQuestion.answerTexture));
+
+            var availableChoices = new List<string>(nextQuestion.choices);
+            availableChoices.Remove(nextQuestion.answer);
+
+            int answersPerQuestion = 2;
+
+            for (var i = 1; i < answersPerQuestion; i++) {
+                var wrongImageName = availableChoices[Random.Range(0, availableChoices.Count)];
+
+                var wrongImageKey = nextQuestion.choices.FindIndex(item => item == wrongImageName);
+
+                if (nextQuestion.choiceTextures.ContainsKey(wrongImageKey) == false) {
                     continue;
                 }
 
-                questionSet.question = nextQuestion;
+                var wrongImageTex = nextQuestion.choiceTextures[wrongImageKey];
 
-                questionSet.images = new List<AnswerImage>();
-
-                questionSet.tickerElement = ticker.AddNewItem(nextQuestion.clue);
-                questionSet.tickerElement.expectedImageName = nextQuestion.answer;
-
-                var questionColor = new Color32(
-                    (byte)nextQuestion.colour[0], 
-                    (byte)nextQuestion.colour[1], 
-                    (byte)nextQuestion.colour[2], 
-                    255
-                );
-
-                questionSet.tickerElement.color = questionColor;
-
-                var spawnPoints = GameObject.FindGameObjectsWithTag("Respawn");
-
-
-                // spawn the answer
-                questionSet.images.Add(SpawnImage(spawnPoints, nextQuestion.answer,nextQuestion.answerTexture));
-
-                var availableChoices = new List<string>(nextQuestion.choices);
-                availableChoices.Remove(nextQuestion.answer);
-
-                int answersPerQuestion = 2;
-
-                for (var i = 1; i < answersPerQuestion; i++) {
-                    var wrongImageName = availableChoices[Random.Range(0, availableChoices.Count)];
-
-                    var wrongImageKey = nextQuestion.choices.FindIndex(item => item == wrongImageName);
-
-                    if (nextQuestion.choiceTextures.ContainsKey(wrongImageKey) == false) {
-                        continue;
-                    }
-
-                    var wrongImageTex = nextQuestion.choiceTextures[wrongImageKey];
-
-                    if (wrongImageTex == null) {
-                        continue;
-                    }
-
-                    questionSet.images.Add(SpawnImage (spawnPoints, wrongImageName, wrongImageTex));
+                if (wrongImageTex == null) {
+                    continue;
                 }
 
-                activeQuestions.Add(questionSet);
-
+                questionSet.images.Add(SpawnImage (spawnPoints, wrongImageName, wrongImageTex));
             }
 
-            // wait for the next frame
-            yield return null;
+            activeQuestions.Add(questionSet);
+
         }
 
-        // we've broken out of the loop - game over!
-
-
+        return true;
     }
 
     public AnswerImage answerPrefab;

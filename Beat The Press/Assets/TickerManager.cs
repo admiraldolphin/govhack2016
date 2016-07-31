@@ -66,4 +66,12 @@ public class TickerManager : MonoBehaviour {
 
     }
 
+    public void Clear ()
+    {
+        foreach (var element in tickerElements) {
+            DestroyObject(element.gameObject);
+        }
+
+        tickerElements.Clear();
+    }
 }

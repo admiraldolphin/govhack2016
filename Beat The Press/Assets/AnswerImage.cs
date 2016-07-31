@@ -5,6 +5,9 @@ public class AnswerImage : MonoBehaviour {
 
 	public string id;
 
+    public AudioClip correctClip;
+    public AudioClip incorrectClip;
+
     public float defaultGravityScale = 0;
     public float regularGravityScale = 1;
 
@@ -20,14 +23,30 @@ public class AnswerImage : MonoBehaviour {
         }
     }
 
+
+
     public void WasCorrect() {
-        Destroy(gameObject);
+
+        GetComponent<AudioSource>().PlayOneShot(correctClip);
+
+        Destroy(GetComponent<SpriteRenderer>());
+        Destroy(GetComponent<Collider2D>());
+        Destroy(GetComponent<Rigidbody2D>());
+
+        Destroy(gameObject, 2.0f);
+
         FindObjectOfType<ScoreManager>().PlayerWasCorrect(lastHoldingPlayer);
     }
 
     public void WasIncorrect ()
     {
-        Destroy(gameObject);
+        GetComponent<AudioSource>().PlayOneShot(incorrectClip);
+
+        Destroy(GetComponent<SpriteRenderer>());
+        Destroy(GetComponent<Collider2D>());
+        Destroy(GetComponent<Rigidbody2D>());
+
+        Destroy(gameObject, 2.0f);
         FindObjectOfType<ScoreManager>().PlayerWasIncorrect(lastHoldingPlayer);
     }
 }

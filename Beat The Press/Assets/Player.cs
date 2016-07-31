@@ -13,6 +13,8 @@ public class Player : MonoBehaviour
 
     private int _score = 0;
 
+    private AudioLowPassFilter filter;
+
     public int score {
         get {
             return _score;
@@ -37,6 +39,8 @@ public class Player : MonoBehaviour
 
         scoreElement.teamImage.sprite = GetComponent<PlayerAppearance>().teamSprite;
 
+        filter = GetComponent<AudioLowPassFilter>();
+
     }
 
     
@@ -48,6 +52,10 @@ public class Player : MonoBehaviour
         }
     }
 
+    public float minFilterFreq = 50;
+    public float maxFilterFreq = 7500;
+    public float movementFilterThreshold = 100;
+
     void Update ()
     {
         var movement = Actions.Movement.Vector * speed * Time.deltaTime;;
@@ -55,6 +63,17 @@ public class Player : MonoBehaviour
         var body = GetComponent<Rigidbody2D>();
 
         body.AddForce(movement);
+
+        var currentSpeed = body.velocity.magnitude;
+
+        var normalisedSpeed = currentSpeed / movementFilterThreshold;
+
+        var freq = Mathf.Lerp(minFilterFreq, maxFilterFreq, normalisedSpeed);
+
+        filter.cutoffFrequency = freq;
+
+
+
 
         //transform.Translate(movement);
 
