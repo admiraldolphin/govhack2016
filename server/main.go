@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/admiraldolphin/govhack2016/server/abc"
+	"github.com/admiraldolphin/govhack2016/server/abclocal"
 	"github.com/admiraldolphin/govhack2016/server/csiro"
 	"github.com/admiraldolphin/govhack2016/server/linc"
 	"github.com/admiraldolphin/govhack2016/server/newscorp"
@@ -23,9 +24,11 @@ var (
 	lincBase     = flag.String("linc_base", "", "Base path for LINC Tasmania files")
 	newscorpBase = flag.String("newscorp_base", "", "Base path for Newscorp files")
 	csiroBase    = flag.String("csiro_base", "", "Base path for CSIRO Science Image files")
-	fakesProb    = flag.Float64("fakes_probability", 0.1, "Probability that the clue and answer will be replaced with a fake")
-	port         = flag.Int("port", 8080, "Serving port")
-	minItems     = flag.Int("min_items", 5, "Minimum items in a subject to not combine the subject for questions")
+	abcLocalBase = flag.String("abclocal_base", "", "Base path for ABC Local Photo Stores files")
+
+	fakesProb = flag.Float64("fakes_probability", 0.1, "Probability that the clue and answer will be replaced with a fake")
+	port      = flag.Int("port", 8080, "Serving port")
+	minItems  = flag.Int("min_items", 5, "Minimum items in a subject to not combine the subject for questions")
 )
 
 func main() {
@@ -82,6 +85,15 @@ func main() {
 		db, err := csiro.Load(*csiroBase)
 		if err != nil {
 			log.Fatalf("Loading CSIRO Science Image database: %v", err)
+		}
+		db.AddHandlers()
+		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: db.MakeQuestion, Ratio: 1})
+	}
+
+	if *abcLocalBase != "" {
+		db, err := abclocal.Load(*abcLocalBase)
+		if err != nil {
+			log.Fatalf("Loading ABC Local Photo Stories database: %v", err)
 		}
 		db.AddHandlers()
 		q.Sources = append(q.Sources, quiz.Source{MakeQuestion: db.MakeQuestion, Ratio: 1})
