@@ -13,6 +13,8 @@ public class Grabbing : MonoBehaviour
         } 
     }
 
+    private GameObject grabbedObject;
+
     public float maximumGrabbingRange = 0.5f;
 
     void OnDrawGizmos ()
@@ -38,6 +40,10 @@ public class Grabbing : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
+
+        if (grabbingJoint != null && grabbedObject == null) {
+            ReleaseGrab();
+        }
 
         if (player.Actions.Grab.WasPressed) {
             // try to create a joint if we don't already have one
@@ -65,12 +71,23 @@ public class Grabbing : MonoBehaviour
                 return;
             }
 
+            var answer = hit.collider.GetComponent<AnswerImage>();
+
+            // we only care about AnswerImages
+            if (answer == null) {
+                return;
+            }
+
+            answer.lastHoldingPlayer = GetComponentInParent<Player>();
+
             var connectedBody = hit.collider.GetComponent<Rigidbody2D> ();
 
             if (connectedBody == null) {
                 isGrabbing = false;
                 return;
             }
+
+            grabbedObject = hit.collider.gameObject;
 
             Debug.LogFormat ("Collected {0}", hit.collider.gameObject);
             isGrabbing = true;

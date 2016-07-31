@@ -6,7 +6,19 @@ public class TickerElement : MonoBehaviour {
 
     public float speed;
 
+    public string expectedImageName;
 
+    [SerializeField]
+    private Image borderImage;
+
+    public Color color {
+        get {
+            return borderImage.color;
+        }
+        set {
+            borderImage.color = value;
+        }
+    }
 
     public string text {
         get {
@@ -50,4 +62,19 @@ public class TickerElement : MonoBehaviour {
             Destroy(gameObject);
         }
 	}
+
+    void OnCollisionEnter2D(Collision2D c) {
+
+        var answer = c.gameObject.GetComponent<AnswerImage>();
+
+        if (answer != null) {
+            if (answer.id != expectedImageName) {
+                answer.WasIncorrect();
+            } else {
+                Destroy(gameObject);
+                answer.WasCorrect();
+            }
+        }
+        
+    }
 }

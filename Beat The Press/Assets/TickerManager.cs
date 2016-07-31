@@ -21,11 +21,6 @@ public class TickerManager : MonoBehaviour {
         // Sweep for nulls in the tickerElements list
         tickerElements.RemoveAll(i => i == null);
 
-        if (CanAddNewItem()) {
-            var text = inputField.text;
-
-            AddNewItem(text);
-        }
     }
 
     public bool CanAddNewItem() {
@@ -49,7 +44,7 @@ public class TickerManager : MonoBehaviour {
 
     }
 
-    public void AddNewItem(string text) {
+    public TickerElement AddNewItem(string text) {
         
         var newElement = Instantiate(tickerPrefab);
 
@@ -69,6 +64,8 @@ public class TickerManager : MonoBehaviour {
             var bX = b.rectTransform.anchoredPosition.x;
             return bX.CompareTo(aX);
         });
+
+        return newElement;
 
     }
 

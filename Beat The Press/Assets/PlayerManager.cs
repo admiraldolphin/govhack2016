@@ -42,9 +42,15 @@ public class PlayerManager : MonoBehaviour
         keyboardListener.Destroy ();
     }
 
+    public bool playersCanJoin = false;
+
 
     void Update ()
     {
+
+        if (playersCanJoin == false)
+            return;
+
         if (JoinButtonWasPressedOnListener (joystickListener)) {
             var inputDevice = InputManager.ActiveDevice;
 

@@ -3,6 +3,9 @@ using System.Collections;
 
 using Newtonsoft.Json;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+
+
 
 public struct DownloadWithCallback {
 
@@ -15,17 +18,29 @@ public struct DownloadWithCallback {
 [JsonObject(MemberSerialization.Fields)]
 public class Question {
 
-
     public string clue;
     public List<string> choices = new List<string>();
     public string answer;
     public string source;
 
+    public List<int> colour;
+
+    [OnDeserialized]
+    internal void OnDeserializedMethod(StreamingContext context) {
+        choiceTextures = new Dictionary<int, Texture2D>();
+    }
+
     public Dictionary<int, Texture2D> choiceTextures = new Dictionary<int, Texture2D>();
+
+    public bool isFake {
+        get {
+            return string.IsNullOrEmpty(clue) == false && (choices == null || choices.Count == 0);
+        }
+    }
 
     public bool isUsable {
         get {
-            return answerTexture != null;
+            return isFake ||  answerTexture != null;
         }
     }
 
@@ -43,24 +58,44 @@ public class Question {
 
     public bool allTexturesLoaded {
         get {
-            return choiceTextures.Count == choices.Count;
+            if (isFake) {
+                return true;
+            } else {
+                return choiceTextures.Count == choices.Count;
+            }
+
         }
     }
 
     public List<DownloadWithCallback> GetDownloaders(string baseURL) {
+
+        if (isFake) {
+            // return an empty list
+            return new List<DownloadWithCallback>();           
+        }
 
         var list = new List<DownloadWithCallback>();
 
         int i = 0;
 
         foreach (var item in choices) {
+            var theItem = item;
             var loader = new DownloadWithCallback();
-            var url = string.Format ("{0}{1}", baseURL, item);
+            var url = string.Format ("{0}{1}", baseURL, theItem);
+
+            var thisCount = i;
             loader.www = new WWW(url);
             loader.callback = delegate {
-                var tex = loader.www.texture;
+                if (loader.www.error != null) {
+                    Debug.LogErrorFormat("Error downloading {0}: {1}", theItem, loader.www.error);
 
-                choiceTextures[i] = tex;
+                } else {
+                    Debug.LogFormat("Downloaded {0}", theItem);
+                    var tex = loader.www.texture;
+
+                    choiceTextures[thisCount] = tex;
+                }
+
             };
 
             list.Add(loader);
@@ -85,7 +120,11 @@ public class DataManager : MonoBehaviour {
 
     public bool dataAvailable { 
         get {
-            return questions != null && questions.Count > 0; 
+            if (questions == null)
+                return false;
+            
+            var usableQuestions = questions.FindAll(i => i.isUsable);
+            return usableQuestions.Count > 0;
         }
     }
 
@@ -132,17 +171,14 @@ public class DataManager : MonoBehaviour {
     }
 
     void Start() {
-        LoadData();
+        StartCoroutine(LoadData());
+
+        StartCoroutine(CreateSceneQuestions());
     }
 
 
-    public void LoadData() {
-        
-        StartCoroutine(WaitForDownload());
 
-    }
-
-    private IEnumerator WaitForDownload() {
+    private IEnumerator LoadData() {
 
         string fullURL = string.Format ("{0}/quiz?n={1}", URL, questionCount);
 
@@ -153,6 +189,12 @@ public class DataManager : MonoBehaviour {
         var loadedText = dataLoadOperation.text;
 
         questions = JsonConvert.DeserializeObject<List<Question>>(loadedText);
+
+        if (questions == null) {
+            Debug.LogErrorFormat("Error downloading questions: {0}", dataLoadOperation.error);
+            questions = new List<Question>();
+            yield break;
+        }
 
         var allLoaders = new List<DownloadWithCallback>();
 
@@ -166,6 +208,7 @@ public class DataManager : MonoBehaviour {
             loader.callback();
         }
 
+        Debug.Log("Loading complete");
 
     }
 
@@ -175,14 +218,164 @@ public class DataManager : MonoBehaviour {
 
         if (questions != null) {
             foreach (var q in questions) {
-                if (q.allTexturesLoaded) {
+                if (q.isUsable) {
                     completeCount ++;
                 }
             }
         }
 
-        GUI.Label (new Rect (10, 50, 400, 50), string.Format ("Data manager: {0}\nQuestions: {1} ({2} complete)", stateString, questions.Count, completeCount));
+        GUI.Label (new Rect (10, 250, 400, 50), string.Format ("Data manager: {0}\nQuestions: {1} ({2} complete)", stateString, questions.Count, completeCount));
     }
-    
+
+    AnswerImage SpawnImage (GameObject[] spawnPoints, string imageName, Texture2D tex)
+    {
+        var name = string.Format ("Answer {0}", imageName);
+        var obj = Instantiate (answerPrefab);
+        obj.name = name;
+        var pixelsPerUnit = tex.width / 2;
+        var sprite = Sprite.Create (tex, new Rect (0, 0, tex.width, tex.height), new Vector2 (0.5f, 0.5f), pixelsPerUnit);
+        obj.GetComponent<SpriteRenderer> ().sprite = sprite;
+        obj.id = imageName;
+        obj.gameObject.AddComponent<BoxCollider2D> ();
+        // Find a spawn point
+        var spawn = spawnPoints [Random.Range (0, spawnPoints.Length)];
+        obj.transform.position = spawn.transform.position;
+
+        return obj;
+
+    }
+
+    public RectTransform menu;
+    public RectTransform pressAnyKey;
+
+    IEnumerator CreateSceneQuestions() {
+
+        menu.gameObject.SetActive(true);
+        pressAnyKey.gameObject.SetActive(false);
+
+        Debug.Log("Waiting for download to complete");
+
+        yield return new WaitUntil(delegate() {
+            return this.state == State.Loaded;
+        });
+
+        Debug.Log("Download complete!");
+
+
+        pressAnyKey.gameObject.SetActive(true);
+
+        // wait for a button to be pressed
+        yield return new WaitUntil(() => InControl.InputManager.CommandWasPressed);
+
+        menu.gameObject.SetActive(false);
+
+        var activeQuestions = new List<QuestionSet>();
+
+        FindObjectOfType<PlayerManager>().playersCanJoin = true;
+
+        FindObjectOfType<TimeManager>().StartClock();
+
+
+        while (true) {
+
+
+
+            if (FindObjectOfType<TimeManager>().clockHasExpired) {
+                break;
+            }
+
+            // should we remove expired questions?
+            foreach (var question in activeQuestions) {
+                if (question.tickerElement == null) {
+                    foreach (var answer in question.images) {  
+                        if (answer != null)
+                            Destroy(answer.gameObject);
+                    }
+                }
+            }
+
+            activeQuestions.RemoveAll(q => q.tickerElement == null);
+
+            // can we add a new question?
+            if (ticker.CanAddNewItem()) {
+
+                var questionSet = new QuestionSet();
+
+                // select a question
+                var nextQuestion = questions[Random.Range(0, questions.Count)];
+
+                if (nextQuestion.answerTexture == null) {
+                    continue;
+                }
+
+                questionSet.question = nextQuestion;
+
+                questionSet.images = new List<AnswerImage>();
+
+                questionSet.tickerElement = ticker.AddNewItem(nextQuestion.clue);
+                questionSet.tickerElement.expectedImageName = nextQuestion.answer;
+
+                var questionColor = new Color32(
+                    (byte)nextQuestion.colour[0], 
+                    (byte)nextQuestion.colour[1], 
+                    (byte)nextQuestion.colour[2], 
+                    255
+                );
+
+                questionSet.tickerElement.color = questionColor;
+
+                var spawnPoints = GameObject.FindGameObjectsWithTag("Respawn");
+
+
+                // spawn the answer
+                questionSet.images.Add(SpawnImage(spawnPoints, nextQuestion.answer,nextQuestion.answerTexture));
+
+                var availableChoices = new List<string>(nextQuestion.choices);
+                availableChoices.Remove(nextQuestion.answer);
+
+                int answersPerQuestion = 2;
+
+                for (var i = 1; i < answersPerQuestion; i++) {
+                    var wrongImageName = availableChoices[Random.Range(0, availableChoices.Count)];
+
+                    var wrongImageKey = nextQuestion.choices.FindIndex(item => item == wrongImageName);
+
+                    if (nextQuestion.choiceTextures.ContainsKey(wrongImageKey) == false) {
+                        continue;
+                    }
+
+                    var wrongImageTex = nextQuestion.choiceTextures[wrongImageKey];
+
+                    if (wrongImageTex == null) {
+                        continue;
+                    }
+
+                    questionSet.images.Add(SpawnImage (spawnPoints, wrongImageName, wrongImageTex));
+                }
+
+                activeQuestions.Add(questionSet);
+
+            }
+
+            // wait for the next frame
+            yield return null;
+        }
+
+        // we've broken out of the loop - game over!
+
+
+    }
+
+    public AnswerImage answerPrefab;
+
+    public TickerManager ticker;
+
+    public struct QuestionSet {
+        public Question question;
+        public TickerElement tickerElement;
+        public List<AnswerImage> images;
+    }
+
+
 	
 }

@@ -37,10 +37,12 @@ public class CameraFollowing : MonoBehaviour {
 				}
 			}
 
-			var maximumGnomeDistance = 0.0f;
-			maximumGnomeDistance = Mathf.Max(bounds.size.x, bounds.size.y);
+            bounds.size += Vector3.one * 1.5f;
 
-			var destinationCameraSize = Mathf.Clamp(maximumGnomeDistance, minimumSize, maximumSize);
+			var maximumDistance = 0.0f;
+            maximumDistance = Mathf.Max(bounds.size.x, bounds.size.y);
+
+			var destinationCameraSize = Mathf.Clamp(maximumDistance, minimumSize, maximumSize);
 			destinationCameraSize /= 2.0f;
 
 			var camera = this.GetComponent<Camera>();
@@ -84,6 +86,8 @@ public class CameraFollowing : MonoBehaviour {
 				}
 
 			}
+
+            bounds.size += Vector3.one * 1.5f;
 
 			Gizmos.DrawWireCube(bounds.center, bounds.size);
 

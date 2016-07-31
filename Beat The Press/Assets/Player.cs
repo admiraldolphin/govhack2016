@@ -9,11 +9,30 @@ public class Player : MonoBehaviour
 
     public float speed = 10.0f;
 
+    private ScoreElement scoreElement;
+
+    private int _score = 0;
+
+    public int score {
+        get {
+            return _score;
+        }
+        set {
+            _score = value;
+            scoreElement.score = value;
+        }
+    }
+
     void Start() {
         if (Actions == null) {
             Actions = PlayerActions.CreateWithKeyboardBindings();
         }
+
+        scoreElement = FindObjectOfType<ScoreManager>().CreateScoreElement();
+
     }
+
+    
 
     void OnDisable ()
     {
