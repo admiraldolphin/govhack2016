@@ -13,9 +13,6 @@ public class TickerManager : MonoBehaviour {
 
     public InputField inputField;
 
-    void OnGUI() {
-        GUI.Label (new Rect (10, 10, 100, 40), string.Format ("{0} items", tickerElements.Count));
-    }
 
     void Update() {
         // Sweep for nulls in the tickerElements list
@@ -69,4 +66,12 @@ public class TickerManager : MonoBehaviour {
 
     }
 
+    public void Clear ()
+    {
+        foreach (var element in tickerElements) {
+            DestroyObject(element.gameObject);
+        }
+
+        tickerElements.Clear();
+    }
 }

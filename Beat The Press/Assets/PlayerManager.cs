@@ -153,8 +153,17 @@ public class PlayerManager : MonoBehaviour
         return null;
     }
 
+    public void RemoveAllPlayers() {
+        foreach (var player in players) {
+            playerPositions.Insert (0, player.transform.position);
+            player.Actions = null;
+            Destroy (player.gameObject);
+        }
 
-    void RemovePlayer (Player player)
+        players.Clear();
+    }
+
+    public void RemovePlayer (Player player)
     {
         playerPositions.Insert (0, player.transform.position);
         players.Remove (player);

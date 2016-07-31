@@ -70,11 +70,25 @@ public class TickerElement : MonoBehaviour {
         if (answer != null) {
             if (answer.id != expectedImageName) {
                 answer.WasIncorrect();
+
+                var g = (GameObject)Instantiate(failureEffectPrefab);
+
+                g.transform.position = new Vector3(c.contacts[0].point.x, c.contacts[0].point.y);
             } else {
+
+                
+
+                var g = (GameObject)Instantiate(successEffectPrefab);
+
+                g.transform.position = new Vector3(c.contacts[0].point.x, c.contacts[0].point.y);
+
                 Destroy(gameObject);
                 answer.WasCorrect();
             }
         }
         
     }
+
+    public GameObject successEffectPrefab;
+    public GameObject failureEffectPrefab;
 }

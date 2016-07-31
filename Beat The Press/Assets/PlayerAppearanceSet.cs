@@ -11,5 +11,7 @@ public class PlayerAppearanceSet : ScriptableObject {
     public Sprite armDownSprite;
     public Sprite mouthSmileSprite;
     public Sprite mouthFrownSprite;
+
+    public Sprite teamSprite;
 	
 }

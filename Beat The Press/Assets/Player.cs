@@ -13,11 +13,18 @@ public class Player : MonoBehaviour
 
     private int _score = 0;
 
+    private AudioLowPassFilter filter;
+
     public int score {
         get {
             return _score;
         }
         set {
+
+            if (_score > value) {
+                GetComponent<Animator>().SetTrigger("Shake Fist");
+            }
+
             _score = value;
             scoreElement.score = value;
         }
@@ -30,6 +37,10 @@ public class Player : MonoBehaviour
 
         scoreElement = FindObjectOfType<ScoreManager>().CreateScoreElement();
 
+        scoreElement.teamImage.sprite = GetComponent<PlayerAppearance>().teamSprite;
+
+        filter = GetComponent<AudioLowPassFilter>();
+
     }
 
     
@@ -41,6 +52,10 @@ public class Player : MonoBehaviour
         }
     }
 
+    public float minFilterFreq = 50;
+    public float maxFilterFreq = 7500;
+    public float movementFilterThreshold = 100;
+
     void Update ()
     {
         var movement = Actions.Movement.Vector * speed * Time.deltaTime;;
@@ -48,6 +63,17 @@ public class Player : MonoBehaviour
         var body = GetComponent<Rigidbody2D>();
 
         body.AddForce(movement);
+
+        var currentSpeed = body.velocity.magnitude;
+
+        var normalisedSpeed = currentSpeed / movementFilterThreshold;
+
+        var freq = Mathf.Lerp(minFilterFreq, maxFilterFreq, normalisedSpeed);
+
+        filter.cutoffFrequency = freq;
+
+
+
 
         //transform.Translate(movement);
 
