@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"image/color"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -12,12 +13,15 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/admiraldolphin/govhack2016/server/images"
 	"github.com/admiraldolphin/govhack2016/server/quiz"
 )
 
 const source = "ABC"
 
 var (
+	colour = color.RGBA{0x11, 0x33, 0xff, 0xff}
+
 	tmplItem = template.Must(template.New("item").Parse(
 		`<h1>{{.Title}}</h1><pre>{{ .PrettyJSON }}</pre>{{$id := .ID}}{{ range $i := .Images }}<img src="/abc/img/{{$id}}/{{$i}}" />{{end}}`))
 	tmplSubjects = template.Must(template.New("subjects").Parse(
@@ -70,7 +74,8 @@ func (db *Database) AddHandlers() {
 	http.HandleFunc("/abc/img/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s", r.Method, r.URL)
 		f := filepath.Join(db.BasePath, strings.TrimPrefix(r.URL.Path, "/abc/img/"))
-		http.ServeFile(w, r, f)
+		//http.ServeFile(w, r, f)
+		images.ServeBorderedImage(w, r, f, 0.05, colour)
 	})
 	http.HandleFunc("/abc/subject/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s", r.Method, r.URL)
@@ -199,5 +204,6 @@ pickChoices:
 		Answer:  c[0],
 		Choices: c,
 		Source:  source,
+		Colour:  images.Hex(colour),
 	}
 }

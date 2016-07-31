@@ -3,6 +3,7 @@ package linc
 import (
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -10,10 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/admiraldolphin/govhack2016/server/images"
 	"github.com/admiraldolphin/govhack2016/server/quiz"
 )
 
 const source = "LINC Tasmania"
+
+var colour = color.RGBA{0x11, 0xee, 0x44, 0xff}
 
 type Item struct {
 	Subject interface{} `json:"subject"` // Should be either string or []string
@@ -55,7 +59,8 @@ func (db *Database) AddHandlers() {
 	http.HandleFunc("/linc/img/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s", r.Method, r.URL)
 		f := filepath.Join(db.BasePath, "linc", strings.TrimPrefix(r.URL.Path, "/linc/img/"))
-		http.ServeFile(w, r, f)
+		//http.ServeFile(w, r, f)
+		images.ServeBorderedImage(w, r, f, 0.05, colour)
 	})
 }
 
@@ -75,5 +80,6 @@ func (db *Database) MakeQuestion() *quiz.Question {
 		Choices: c,
 		Answer:  c[0],
 		Source:  source,
+		Colour:  images.Hex(colour),
 	}
 }

@@ -3,6 +3,7 @@ package portrait
 import (
 	"encoding/json"
 	"fmt"
+	"image/color"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -10,10 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/admiraldolphin/govhack2016/server/images"
 	"github.com/admiraldolphin/govhack2016/server/quiz"
 )
 
 const source = "National Portrait Gallery"
+
+var colour = color.RGBA{0xff, 0x22, 0x11, 0xff}
 
 // Database holds all the info on portraits.
 type Database struct {
@@ -62,7 +66,8 @@ func (db *Database) AddHandlers() {
 	http.HandleFunc("/npg/img/", func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s", r.Method, r.URL)
 		f := filepath.Join(db.BasePath, "portraits", strings.TrimPrefix(r.URL.Path, "/npg/img/"))
-		http.ServeFile(w, r, f)
+		images.ServeBorderedImage(w, r, f, 0.05, colour)
+		//http.ServeFile(w, r, f)
 	})
 }
 
@@ -82,5 +87,6 @@ func (db *Database) MakeQuestion() *quiz.Question {
 		Choices: c,
 		Answer:  c[0],
 		Source:  source,
+		Colour:  images.Hex(colour),
 	}
 }
