@@ -19,6 +19,7 @@ func ServeBorderedImage(w http.ResponseWriter, req *http.Request, file string, t
 	if strings.Contains(file, "..") {
 		w.WriteHeader(http.StatusForbidden)
 		fmt.Fprintf(w, "403 Forbidden")
+		log.Printf("403 Requested filepath has .. in it: %q", file)
 		return
 	}
 
@@ -26,6 +27,7 @@ func ServeBorderedImage(w http.ResponseWriter, req *http.Request, file string, t
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "404 Not Found")
+		log.Printf("404 Couldn't stat file: %v", err)
 		return
 	}
 
@@ -33,6 +35,7 @@ func ServeBorderedImage(w http.ResponseWriter, req *http.Request, file string, t
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "404 Not Found")
+		log.Printf("404 Couldn't open file: %v", err)
 		return
 	}
 	defer f.Close()

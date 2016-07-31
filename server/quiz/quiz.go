@@ -47,6 +47,7 @@ func (q *Quiz) AddHandlers() {
 		if n < 1 || n > 50 {
 			w.WriteHeader(http.StatusForbidden)
 			fmt.Fprint(w, "403 Forbidden")
+			log.Printf("Requested number out of range: %d", n)
 			return
 		}
 
@@ -75,6 +76,7 @@ func (q *Quiz) AddHandlers() {
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			fmt.Fprint(w, "500 Internal Server Error")
+			log.Printf("Marshalling questions: %v", err)
 			return
 		}
 		h := w.Header()
