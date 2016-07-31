@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image/color"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -40,6 +41,7 @@ func ServeBorderedImage(w http.ResponseWriter, req *http.Request, file string, t
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		fmt.Fprintf(w, "500 Internal Server Error")
+		log.Printf("Error applying border: %v", err)
 		return
 	}
 
