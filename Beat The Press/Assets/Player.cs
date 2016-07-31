@@ -18,6 +18,11 @@ public class Player : MonoBehaviour
             return _score;
         }
         set {
+
+            if (_score > value) {
+                GetComponent<Animator>().SetTrigger("Shake Fist");
+            }
+
             _score = value;
             scoreElement.score = value;
         }
@@ -29,6 +34,8 @@ public class Player : MonoBehaviour
         }
 
         scoreElement = FindObjectOfType<ScoreManager>().CreateScoreElement();
+
+        scoreElement.teamImage.sprite = GetComponent<PlayerAppearance>().teamSprite;
 
     }
 

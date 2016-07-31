@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 [ExecuteInEditMode]
 public class PlayerAppearance : MonoBehaviour {
@@ -13,7 +14,22 @@ public class PlayerAppearance : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 
-        defaultSet = sets[Random.Range(0, sets.Length)];
+        var usedSets = new List<PlayerAppearanceSet>();
+
+        foreach (var item in FindObjectsOfType<PlayerAppearance>()) {
+            if (item == this)
+                continue;
+
+            usedSets.Add(item.currentSet);
+        }
+
+        var availableSets = new List<PlayerAppearanceSet>(sets);
+
+        foreach (var used in usedSets) {
+            availableSets.Remove(used);
+        }
+
+        defaultSet = availableSets[Random.Range(0, availableSets.Count)];
 
         UseAppearanceSet(defaultSet);
 
@@ -54,6 +70,12 @@ public class PlayerAppearance : MonoBehaviour {
 
     public bool isSmiling;
     private bool lastSmiling;
+
+    public Sprite teamSprite {
+        get {
+            return currentSet.teamSprite;
+        }
+    }
 	
     public void UseAppearanceSet(PlayerAppearanceSet set) {
 
@@ -63,6 +85,8 @@ public class PlayerAppearance : MonoBehaviour {
         SpriteRendererNamed("Character/Head").sprite = set.faceSprite;
 
         SpriteRendererNamed("Character/Head/Mouth").sprite = currentSet.mouthFrownSprite;
+
+        SpriteRendererNamed("Desk/Team Indicator").sprite = currentSet.teamSprite;
 
         lastArmUp = !armUp;
         lastSmiling = !isSmiling;

@@ -212,27 +212,15 @@ public class DataManager : MonoBehaviour {
 
     }
 
-    void OnGUI() {
 
-        int completeCount = 0;
-
-        if (questions != null) {
-            foreach (var q in questions) {
-                if (q.isUsable) {
-                    completeCount ++;
-                }
-            }
-        }
-
-        GUI.Label (new Rect (10, 250, 400, 50), string.Format ("Data manager: {0}\nQuestions: {1} ({2} complete)", stateString, questions.Count, completeCount));
-    }
+    public float imageSize = 2.5f;
 
     AnswerImage SpawnImage (GameObject[] spawnPoints, string imageName, Texture2D tex)
     {
         var name = string.Format ("Answer {0}", imageName);
         var obj = Instantiate (answerPrefab);
         obj.name = name;
-        var pixelsPerUnit = tex.width / 2;
+        var pixelsPerUnit = tex.width / imageSize;
         var sprite = Sprite.Create (tex, new Rect (0, 0, tex.width, tex.height), new Vector2 (0.5f, 0.5f), pixelsPerUnit);
         obj.GetComponent<SpriteRenderer> ().sprite = sprite;
         obj.id = imageName;
