@@ -240,6 +240,8 @@ public class DataManager : MonoBehaviour {
     IEnumerator MainGameLoop() {
 
         while (true) {
+            FindObjectOfType<MusicControl>().PlayMenuMusic();
+
             menu.gameObject.SetActive(true);
             scoreboard.gameObject.SetActive(false);
             pressAnyKey.gameObject.SetActive(false);
@@ -264,6 +266,9 @@ public class DataManager : MonoBehaviour {
                 InControl.InputManager.AnyKeyIsPressed
             );
 
+
+            FindObjectOfType<MusicControl>().PlayInGameMusic();
+
             menu.gameObject.SetActive(false);
 
             FindObjectOfType<PlayerManager>().playersCanJoin = true;
@@ -284,6 +289,10 @@ public class DataManager : MonoBehaviour {
             FindObjectOfType<PlayerManager>().RemoveAllPlayers();
 
             scoreboard.gameObject.SetActive(true);
+
+            FindObjectOfType<PlayerManager>().playersCanJoin = false;
+
+            FindObjectOfType<MusicControl>().PlayMenuMusic();
 
             // clear all answers
             foreach (var answer in FindObjectsOfType<AnswerImage>()) {

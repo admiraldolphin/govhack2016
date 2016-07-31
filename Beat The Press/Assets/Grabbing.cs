@@ -87,6 +87,14 @@ public class Grabbing : MonoBehaviour
                 return;
             }
 
+            // Is anything else grabbing this?
+            foreach (var grabber in FindObjectsOfType<Grabbing>()) {
+                if (grabber == this) continue;
+                if (grabber.grabbedObject == hit.collider.gameObject) {
+                    grabber.ReleaseGrab();
+                }
+            }
+
             grabbedObject = hit.collider.gameObject;
 
             Debug.LogFormat ("Collected {0}", hit.collider.gameObject);
@@ -109,6 +117,7 @@ public class Grabbing : MonoBehaviour
 
     void ReleaseGrab ()
     {
+        grabbedObject = null;
         isGrabbing = false;
         
         Destroy (grabbingJoint);
