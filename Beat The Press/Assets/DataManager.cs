@@ -172,6 +172,16 @@ public class DataManager : MonoBehaviour {
 
     void Start() {
 
+        var configFile = System.IO.Path.Combine(Application.persistentDataPath,"config.txt");
+
+        if (System.IO.File.Exists(configFile)) {
+            var text = System.IO.File.ReadAllLines(configFile);
+            if (text.Length > 0) {
+                this.URL = text[0];
+            }
+        } else {
+            System.IO.File.WriteAllText(configFile, this.URL);
+        }
 
         StartCoroutine(MainGameLoop());
     }
@@ -240,6 +250,8 @@ public class DataManager : MonoBehaviour {
     IEnumerator MainGameLoop() {
 
         while (true) {
+            FindObjectOfType<MusicControl>().PlayMenuMusic();
+
             menu.gameObject.SetActive(true);
             scoreboard.gameObject.SetActive(false);
             pressAnyKey.gameObject.SetActive(false);
@@ -264,6 +276,9 @@ public class DataManager : MonoBehaviour {
                 InControl.InputManager.AnyKeyIsPressed
             );
 
+
+            FindObjectOfType<MusicControl>().PlayInGameMusic();
+
             menu.gameObject.SetActive(false);
 
             FindObjectOfType<PlayerManager>().playersCanJoin = true;
@@ -284,6 +299,10 @@ public class DataManager : MonoBehaviour {
             FindObjectOfType<PlayerManager>().RemoveAllPlayers();
 
             scoreboard.gameObject.SetActive(true);
+
+            FindObjectOfType<PlayerManager>().playersCanJoin = false;
+
+            FindObjectOfType<MusicControl>().PlayMenuMusic();
 
             // clear all answers
             foreach (var answer in FindObjectsOfType<AnswerImage>()) {
